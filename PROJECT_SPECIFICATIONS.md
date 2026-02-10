@@ -208,3 +208,42 @@ To protect the security of users reporting from sensitive areas.
 *   New accounts start with a `ReputationScore` of 0.
 *   Reputation only increases when a user's report is verified by *independent* users with established high reputation.
 *   Rate-limiting on contributions based on IP and Device ID.
+
+---
+
+## 13. Academic & Engineering Assessment (Professor's Perspective)
+
+### 13.1 Theoretical Foundations
+This project sits at the intersection of two critical research domains:
+*   **Volunteered Geographic Information (VGI):** Leveraging "citizens as sensors" (Goodchild, 2007) to fill information gaps where official data is non-existent.
+*   **Offline-First Paradigm:** Moving away from the "Cloud-Centric" model to a "Device-Centric" model, where the server is an optional synchronization point rather than a dependency.
+
+### 13.2 Engineering Methodology (Agile Scrum)
+The project follows the **Agile Scrum** framework to manage complexity in a volatile environment:
+*   **Sprints:** 2-week development cycles focusing on MVP (Minimum Viable Product) features first (e.g., Offline Map rendering).
+*   **Sprint Backlog:** Prioritizes "Mission Critical" features (Offline access) over "Value Added" features (Social sharing).
+*   **Artifacts:** Use of Burndown charts to track velocity and ensure timely graduation delivery.
+
+### 13.3 Formal Design & Modeling
+To ensure structural integrity, the system is modeled using:
+*   **UML Use Case Diagrams:** Mapping interactions between Explorers, Contributors, and the System Worker.
+*   **Sequence Diagrams:** Modeling the complex "Offline Write -> Local Store -> Reconnection -> Sync -> Server Ack" lifecycle.
+*   **State Machine Diagrams:** Defining the lifecycle of a `HealthFacility` record (Pending -> Verified -> Disputed -> Archived).
+
+### 13.4 Quality Assurance & Evaluation Metrics
+Success is measured through both technical and social KPIs:
+*   **Accuracy:** The goal is ≥85% accuracy in facility status when compared to ground-truth validations (simulated).
+*   **Resilience:** System availability target of 100% during network blackouts (local functionality).
+*   **Latency:** Mean time to synchronize local data to the cloud < 10 seconds post-reconnection.
+*   **Storage Efficiency:** Map cache should not exceed 50MB for a standard conflict zone region (using PMTiles).
+
+### 13.5 Social Impact & Ethics
+*   **Data Sovereignty:** Users maintain control over their data; geomasking ensures the platform cannot be weaponized to target individuals.
+*   **Inclusivity:** The PWA design ensures the app works on low-end "Legacy" devices common in conflict zones, avoiding a "Digital Divide."
+
+---
+
+## 14. Future Research Directions
+1.  **Mesh Networking:** Implementing Bluetooth/Wi-Fi Direct P2P synchronization for environments with 100% infrastructure destruction.
+2.  **NLP Integration:** Using Natural Language Processing to extract health facility status updates from social media (e.g., WhatsApp groups) to pre-populate the map.
+3.  **Predictive Analysis:** Using historical trust data and conflict patterns to predict where medical shortages are likely to occur.
