@@ -126,3 +126,85 @@ To protect the security of users reporting from sensitive areas.
 *   **Unit Testing:** Test trust calculation functions using Jest.
 *   **Offline Simulation:** Use Chrome DevTools to verify functionality in "Offline" mode.
 *   **Field Testing:** Test on low-end mobile devices to ensure smooth rendering and performance.
+
+---
+
+## 8. Detailed API Specification (RESTful)
+
+### 8.1 Health Facilities
+*   `GET /api/v1/facilities`: Retrieve facilities.
+    *   **Query Params:** `bbox` (bounding box), `type`, `min_trust`.
+    *   **Caching:** Stale-While-Revalidate via Service Worker.
+*   `POST /api/v1/facilities`: Create a new facility report.
+    *   **Auth Required:** Yes.
+    *   **Payload:** `name`, `type`, `geomasked_location`, `status`, `services[]`.
+*   `PATCH /api/v1/facilities/{id}`: Update facility status.
+
+### 8.2 Contributions & Verification
+*   `POST /api/v1/contributions`: Submit a verification (upvote/downvote/dispute).
+    *   **Payload:** `facility_id`, `contribution_type`, `evidence_notes`.
+*   `GET /api/v1/users/me/reputation`: Fetch current user's reputation and history.
+
+---
+
+## 9. Synchronization & Conflict Resolution
+
+### 9.1 Sync Strategy
+1.  **Local First:** All writes go to `IndexedDB` immediately.
+2.  **Background Sync API:** Register a 'sync' event. The browser triggers this when connectivity is stable.
+3.  **Idempotency:** All POST/PATCH requests include a `client_uuid` to prevent duplicate processing if a sync retries.
+
+### 9.2 Conflict Resolution (Last-Write-Wins with Trust Override)
+*   If two updates for the same facility occur offline:
+    1.  The system compares the `timestamp`.
+    2.  If the timestamps are close, the update from the user with the **higher Reputation Score** takes precedence.
+    3.  If both have equal reputation, the most recent update wins (Last-Write-Wins).
+
+---
+
+## 10. Security & Authentication
+
+### 10.1 Authentication
+*   **Provider:** Firebase Auth (supporting Anonymous sign-in for quick reporting, and Phone/Email for established contributors).
+*   **JWT:** Tokens used for all write operations to the API.
+
+### 10.2 Data Encryption
+*   **In-Transit:** TLS 1.3 for all communications.
+*   **At-Rest (Client):** Use `Web Crypto API` to encrypt sensitive records in `IndexedDB` using a key derived from the user's session.
+
+### 10.3 Privacy (Geomasking Implementation)
+*   **Minimum Displacement:** 50 meters.
+*   **Maximum Displacement:** 500 meters.
+*   **Logic:** Calculated on the client side before the payload is sent to the network. The server never sees the "True" coordinate of the contributor.
+
+---
+
+## 11. Infrastructure & Deployment
+
+### 11.1 CI/CD Pipeline
+*   **GitHub Actions:**
+    *   Linting & Type Checking (ESLint/TypeScript).
+    *   Automated Unit Tests (Jest).
+    *   Build PWA assets (Vite).
+    *   Deploy to Firebase Hosting.
+
+### 11.2 Map Tile Hosting
+*   **Strategy:** PMTiles stored on S3-compatible storage (e.g., Cloudflare R2).
+*   **CDN:** Global distribution to ensure fast tile fetching even on poor international links.
+
+---
+
+## 12. Advanced Trust Algorithm Details
+
+### 12.1 Formula Components
+`T(f) = [ Σ (R(u) * V(u,f)) / Σ R(u) ] * D(t)`
+
+*   `T(f)`: Trust score of facility *f*.
+*   `R(u)`: Reputation of user *u*.
+*   `V(u,f)`: Vote value (-1 to +1) given by user *u* to facility *f*.
+*   `D(t)`: Exponential time decay function `e^(-λt)` where *t* is age of report.
+
+### 12.2 Sybil Attack Resistance
+*   New accounts start with a `ReputationScore` of 0.
+*   Reputation only increases when a user's report is verified by *independent* users with established high reputation.
+*   Rate-limiting on contributions based on IP and Device ID.
